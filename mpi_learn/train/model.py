@@ -238,8 +238,12 @@ class MPIModel(object):
         ## can of course be the validation loss
         if self.model:
             ## return a default value from the validation history
-            return (1.-self.model.history.history['val_acc'][-1])
-            #return self.model.history.history['val_loss'][-1]
+            try:
+                return (1.-self.model.history.history['val_acc'][-1])
+                #return self.model.history.history['val_loss'][-1]
+            except:
+                print (self.model.history)
+                print (self.model.history.history.keys())
         else: 
             return 0.
 
