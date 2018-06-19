@@ -350,7 +350,8 @@ class GANModel(MPIModel):
         self._switchingloss = args.get('switchingloss',False)
         self._heavycheck = args.get('heavycheck',False)
         self._show_values = args.get('show_values',False)
-        self._show_loss = args.get('show_loss', True)
+        self._show_loss = args.get('show_loss', False)
+        self._figure_of_merit_opt = args.get('figure_of_merit_opt',1) #0 is moments, 1 is delta-loss        
         self._show_weights = False
 
         self.latent_size=args.get('latent_size',200)
@@ -368,6 +369,8 @@ class GANModel(MPIModel):
         self.checkpoint = args.get('checkpoint',int(os.environ.get('GANCHECKPOINT',0)))
         self.calculate_fom = args.get('calculate_fom',True)
 
+
+        
         if self.tell:
             print ("Generator summary")
             self.generator.summary()
@@ -387,8 +390,8 @@ class GANModel(MPIModel):
 
         MPIModel.__init__(self, models = [
             self.discriminator,
-            #self.generator
-            self.combined ## this is increasing a bit the amount of com by sending twice the discriminator
+            self.generator
+            #self.combined ## this is increasing a bit the amount of com by sending twice the discriminator
         ])
 
         
@@ -938,8 +941,23 @@ class GANModel(MPIModel):
 
         return energies, var
 
-
     def figure_of_merit(self, **args):
+        if self._figure_of_merit_opt == 0:
+            return self.figure_of_merit_from_moments(**args)
+        elif self._figure_of_merit_opt == 1:
+            return self.delta_validation_loss()
+        else:
+            print ("not known fom")
+            return 0.
+
+    def delta_validation_loss(self):
+        print (self.models[1].history.history.keys())
+        g_l = self.models[1].history.history['val_loss'][-1]
+        d_l = self.models[0].history.history['val_loss'][-1]
+        print ("losses from history",g_l,"and",d_l)
+        return np.abs( g_l - d_l )
+        
+    def figure_of_merit_from_moments(self, **args):
         if (not self.calculate_fom) :
             raise ValueError('FOM not enabled: No Geant4 data calculated')
         total = 0
