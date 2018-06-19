@@ -54,6 +54,7 @@ if __name__ == '__main__':
     parser.add_argument('--loss',help='loss function',default='binary_crossentropy')
     parser.add_argument('--early-stopping', type=int, 
             dest='early_stopping', help='patience for early stopping')
+    parser.add_argument('--target-objective', help='early stopping when the figure of merit is above this given value', default=None, type=float)
     parser.add_argument('--worker-optimizer',help='optimizer for workers to use',
             dest='worker_optimizer', default='sgd')
     parser.add_argument('--sync-every', help='how often to sync weights with master', 
@@ -154,7 +155,6 @@ if __name__ == '__main__':
         if args.early_stopping is not None:
             callbacks.append( cbks.EarlyStopping( patience=args.early_stopping,
                                                   verbose=1 ) )
-
     # Creating the MPIManager object causes all needed worker and master nodes to be created
     manager = MPIManager( comm=comm, data=data, algo=algo, model_builder=model_builder,
                           num_epochs=args.epochs, train_list=train_list, val_list=val_list, 
