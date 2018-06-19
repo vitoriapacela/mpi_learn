@@ -608,6 +608,7 @@ class MPIMaster(MPIProcess):
             self.has_parent = True
         self.best_val_loss = None
         self.histories = {}
+        self.target_objective = 0.03
         self.num_workers = child_comm.Get_size() - 1 #all processes but one are workers
         self.num_sync_workers = num_sync_workers
         info = ("Creating MPIMaster with rank {0} and parent rank {1}. "
@@ -675,11 +676,16 @@ class MPIMaster(MPIProcess):
             if (self.algo.validate_every > 0 and 
                     self.time_step % self.algo.validate_every == 0 and self.time_step > 0):
                 epoch_logs = self.validate()
-                #self.callbacks.on_epoch_end(self.epoch, epoch_logs)
                 self.callback.on_epoch_end(self.epoch, logs = epoch_logs)
-                self.epoch += 1
-                #self.callbacks.on_epoch_begin(self.epoch)
+                self.epoch += 1                
                 self.callback.on_epoch_begin(self.epoch)
+                ## compute the fom if we have an objective
+                if self.target_objective is not None:
+                    fom = self.model.figure_of_merit()
+                    print ("how is",fom,"comparing with",self.target_objective)
+                    if fom < self.target_objective:
+                        print ("The target objective is below the desired objective. Stop training")
+                        self.stop_training = True
         else:
             self.sync_child(source)
 
@@ -736,7 +742,7 @@ class MPIMaster(MPIProcess):
             #print ("running workers",sorted(self.running_workers))
             self.recv_any_from_child(status)
             self.process_message( status )
-            if (not self.stop_training) and self.callback.stop_training():#_model.stop_training:
+            if (self.stop_training) or ((not self.stop_training) and self.callback.stop_training()):
                 self.shut_down_workers()
                 self.stop_training = True
         print ("MPIMaster {0} done training".format(self.ranks))
