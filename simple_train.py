@@ -14,7 +14,7 @@ parser.add_option('--cache',default=None)
 
 (options,args) = parser.parse_args()
 
-from mpi_learn.train.GanModel import GANModel
+from mpi_learn.train.HGCALModel import GANModel
 from mpi_learn.train.data import H5Data
 import h5py
 import setGPU
@@ -74,7 +74,7 @@ else:
 
 print (tag,"is the option")
 
-files = list(filter(None,open('train_3d.list').read().split('\n')))
+files = list(filter(None,open('train_3d_energy.list').read().split('\n')))
 data = H5Data( batch_size = 100,
                cache = options.cache,
                preloading=0,
