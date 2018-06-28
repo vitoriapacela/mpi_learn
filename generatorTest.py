@@ -6,7 +6,7 @@ import matplotlib.cm as cm
 from matplotlib.colors import LogNorm, Normalize
 plt.switch_backend('Agg')
 
-from EcalEnergyGan import generator as build_generator
+from mpi_learn.train.HGCALModel import generator as build_generator
 
 
 #gen_weights='/nfshome/svalleco/mpigan/m0_bs_train_mpi_learn_result.h5'
