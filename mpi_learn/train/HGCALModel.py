@@ -633,8 +633,9 @@ class GANModel(MPIModel):
             epoch_disc_loss = self.discriminator.test_on_batch(X_for_disc, Y_for_disc)
             epoch_gen_loss = self.combined.test_on_batch(X_for_combined, Y_for_combined)
             if show_loss:
-                print ("test discr loss",epoch_disc_loss)
-                print ("test combined loss",epoch_gen_loss)
+                with open('test_out.txt', 'a') as f:
+                    print("test discr loss", epoch_disc_loss, file=f)
+                    print("test combined loss", epoch_gen_loss, file=f)
         else:
             ((x_disc_real,re_y),(generated_images, y_disc_fake),(x_comb1,y_comb1),(x_comb2,y_comb2)) = self.batch_transform(x,y)
             real_disc_loss = self.discriminator.test_on_batch( x_disc_real, re_y )
@@ -645,11 +646,9 @@ class GANModel(MPIModel):
             c_loss2= self.combined.test_on_batch(x_comb2,y_comb2 )
             epoch_gen_loss = [(a + b) / 2 for a, b in zip(c_loss1, c_loss2)]
             if show_loss:
-                print ("test discr loss", real_disc_loss, fake_disc_loss)
-                print ("test combined loss", c_loss1, c_loss2)
-
-
-
+                with open('test_out.txt', 'a') as f:
+                    print("test discr loss", real_disc_loss, fake_disc_loss, file=f)
+                    print("test combined loss", c_loss1, c_loss2, file=f)
 
         return np.asarray([epoch_disc_loss, epoch_gen_loss])
 
@@ -690,7 +689,8 @@ class GANModel(MPIModel):
             now = time.mktime(time.gmtime())
             epoch_disc_loss = self.discriminator.train_on_batch(X_for_disc,Y_for_disc)
             if show_loss:
-                print (self.d_cc," discr loss",epoch_disc_loss)
+                with open('train_loss.txt', 'a') as f:
+                    print (self.d_cc," discr loss", epoch_disc_loss, file=f)
             done = time.mktime(time.gmtime())
             if self.d_cc:
                 self.d_t.append( done - now )
@@ -712,7 +712,8 @@ class GANModel(MPIModel):
                 epoch_gen_loss = self.combined.train_on_batch(X_for_combined,Y_for_combined)
 
             if show_loss:
-                print (self.g_cc,"combined loss",epoch_gen_loss)
+                with open('train_loss.txt', 'a') as f:
+                    print (self.g_cc, "combined loss", epoch_gen_loss, file=f)
             done = time.mktime(time.gmtime())
             if self.g_cc:
                 self.g_t.append( done - now )
@@ -748,10 +749,10 @@ class GANModel(MPIModel):
 
 
         if len(self.g_t)>0 and len(self.g_t)%100==0:
-            print ("generator average ",np.mean(self.g_t),"[s] over",len(self.g_t))
+            print ("generator average ",np.mean(self.g_t),"[s] over", len(self.g_t))
 
         if len(self.d_t)>0 and len(self.d_t)%100==0:
-            print ("discriminator average",np.mean(self.d_t),"[s] over ",len(self.d_t))
+            print ("discriminator average",np.mean(self.d_t),"[s] over ", len(self.d_t))
 
         self._checkpoint()
 
@@ -766,7 +767,7 @@ class GANModel(MPIModel):
         show_loss = self._show_loss
         show_weights = self._show_weights
         if self.d_cc>1 and len(self.d_t)%100==0:
-            print ("discriminator average",np.mean(self.d_t),"[s] over ",len(self.d_t))
+            print ("discriminator average", np.mean(self.d_t), "[s] over ", len(self.d_t))
         self.discriminator.trainable = True
 
         if self._heavycheck:
@@ -805,7 +806,8 @@ class GANModel(MPIModel):
 
         if show_loss:
             #print (self.discriminator.metrics_names)
-            print (self.d_cc,"discr loss",real_batch_loss,fake_batch_loss)
+            with open('train_loss.txt', 'a') as f:
+                print (self.d_cc, "discr loss", real_batch_loss, fake_batch_loss, file=f)
         epoch_disc_loss = np.asarray([(a + b) / 2 for a, b in zip(real_batch_loss, fake_batch_loss)])
         done = time.mktime(time.gmtime())
         if self.d_cc:
@@ -835,7 +837,8 @@ class GANModel(MPIModel):
 
         if show_loss:
             #print(self.combined.metrics_names)
-            print (self.g_cc,"combined loss",c_loss1,c_loss2)
+            with open('train_loss.txt', 'a') as f:
+                print(self.g_cc,"combined loss", c_loss1, c_loss2, file=f)
         epoch_gen_loss = np.asarray([(a + b) / 2 for a, b in zip(c_loss1,c_loss2)])
         done = time.mktime(time.gmtime())
         if self.g_cc:

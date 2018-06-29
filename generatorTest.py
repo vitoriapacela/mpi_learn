@@ -10,7 +10,10 @@ from mpi_learn.train.HGCALModel import generator as build_generator
 
 
 #gen_weights='/nfshome/svalleco/mpigan/m0_bs_train_mpi_learn_result.h5'
-gen_weights='weights/params_generator_epoch_029.hdf5'
+#gen_weights='weights/params_generator_epoch_029.hdf5'
+
+gen_weights = 'simple_generator_rmsprop_fresh_.h5'
+
 latent_space=200
 n_events=100
 batch_size=100

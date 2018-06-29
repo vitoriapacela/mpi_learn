@@ -106,7 +106,7 @@ over_test= options.test
 max_batch = options.max
 ibatch=0
 def dump():
-    open('simple_train_%s.json'%tag,'w').write(json.dumps(
+    open('weights/simple_train_%s.json'%tag,'w').write(json.dumps(
         {
             'h':history,
             'th':thistory,
@@ -148,9 +148,9 @@ for e in range(nepochs):
         fom = gm.figure_of_merit()
         print ("figure of merit",fom)
         fhistory[e].append( fom )
-    gm.generator.save_weights('simple_generator_%s.h5'%tag)
-    gm.discriminator.save_weights('simple_discriminator_%s.h5'%tag)
-    gm.combined.save_weights('simple_combined_%s.h5'%tag)
+    gm.generator.save_weights('weights/simple_generator_%s.h5'%tag)
+    gm.discriminator.save_weights('weights/simple_discriminator_%s.h5'%tag)
+    gm.combined.save_weights('weights/simple_combined_%s.h5'%tag)
     dump()
     if max_batch and ibatch>max_batch:
         break
