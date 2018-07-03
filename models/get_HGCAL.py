@@ -26,15 +26,23 @@ def get_data(datafile):
     f.close()
     return X, y, sum_image
 
+# lxplus:
 dest = '/afs/cern.ch/user/v/vbarinpa/work_dir/HGCAL_h5/'
 
-#dest = '/afs/cern.ch/work/v/vbarinpa/work_dir/HGCAL_h5/'
+# Caltech:
+#dest = '/data/shared/HGCAL_h5/'
+
+if not os.path.exists(dest):
+    os.makedirs(dest)
+
 
 #if 'daint' in os.environ.get('HOST', os.environ.get('HOSTNAME','')):
 #    dest='/scratch/snx3000/vlimant/3DGAN/'
 
-#data_original = '/afs/cern.ch/work/v/vbarinpa/convert/experimental_mod/HGCAL_energy_h5/'
+# Caltech:
+#data_original = '/bigdata/shared/HGCAL_energy_h5/'
 
+# lxplus:
 data_original = '/afs/cern.ch/user/v/vbarinpa/work_dir/convert/experimental_mod/HGCAL_energy_h5/'
 
 for F in glob.glob(data_original + '*.h5'):
