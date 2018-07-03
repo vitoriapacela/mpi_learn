@@ -1,4 +1,4 @@
-# mpi_learn [![Build Status](https://travis-ci.org/vitoriapacela/mpi_learn.svg?branch=master)
+# mpi_learn ![Build Status](https://travis-ci.org/vitoriapacela/mpi_learn.svg?branch=master)
 Distributed learning with mpi4py
 
 Dependencies: [`OpenMPI`](https://www.open-mpi.org/) and [`mpi4py`](http://mpi4py.readthedocs.io/en/stable/) (v. >= 2.0.0), [`keras`](https://keras.io/) (v. >= 1.2.0)
