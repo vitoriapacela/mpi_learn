@@ -1,0 +1,21 @@
+language: python
+
+matrix:
+  include:
+    - python: 3.6
+      env: TOXENV=py36
+
+install:
+  - pip install 'tox>=2.9.1'
+  - pip install 'numpy'
+  - pip install 'cython'
+  - pip install 'matplotlib'
+  - pip install 'h5py'
+  - pip install 'pandas'
+  - pip install 'setGPU'
+  - pip install 'keras>=1.2.0'
+  - pip install 'tensorflow-gpu'
+  - pip install 'mpi4py'
+  - pip install 'root_numpy'
+script:
+  - tox

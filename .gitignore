@@ -4,3 +4,6 @@
 *.h5
 *.txt
 .DS_Store
+__pycache__/
+/.pytest_cache
+/.cache

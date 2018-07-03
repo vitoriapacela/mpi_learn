@@ -114,7 +114,7 @@ def _Model(**args):
         return Model(**args)
     
 def discriminator(fixed_bn = False, discr_drop_out=0.2):
-    image = Input(shape=(13, 13, 55, 1), name='image')
+    image = Input(shape=(16, 16, 55, 1), name='image')
     bnm = 2 if fixed_bn else 0
     x = Flatten()(image)
     x = (Dense(1280))(x)
@@ -137,9 +137,9 @@ def generator(latent_size=200, return_intermediate=False, with_bn=True):
     
     bnm=0
     
-    x = _Dense(13*13*55, input_dim=latent_size, init='glorot_normal',
+    x = _Dense(16*16*55, input_dim=latent_size, init='glorot_normal',
               name='gen_dense1')(latent)
-    x = Reshape((13, 13, 55, 1))(x)
+    x = Reshape((16, 16, 55, 1))(x)
     x = LeakyReLU()(x)
     
     if with_bn:
