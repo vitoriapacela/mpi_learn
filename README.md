@@ -18,7 +18,7 @@ For more information about `mpi_learn`, check the [original branch](https://gith
 
 ## Use with the HGCAL dataset:
 * `git clone https://github.com/vitoriapacela/mpi_learn.git`
-* `cd mpi_learn/src/`
+* `cd mpi_learn`
 * Modify `models/get_HGCAL.py` according to the location of the data.
 * `python models/get_HGCAL.py`
 * Modify `mpi_learn/train/HGCALModel.py` according to the shape and format of the data.
