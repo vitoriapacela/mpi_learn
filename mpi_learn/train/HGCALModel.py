@@ -12,7 +12,6 @@ from keras.models import Model
 from keras.layers import Input
 from keras import optimizers
 from keras.optimizers import RMSprop,SGD
-#from EcalEnergyGan import generator, discriminator
 import numpy as np
 import numpy.core.umath_tests as umath
 import time
@@ -114,38 +113,83 @@ def _Model(**args):
         return Model(**args)
     
 def discriminator(fixed_bn = False, discr_drop_out=0.2):
-    image = Input(shape=(16, 16, 55, 1), name='image')
-    bnm = 2 if fixed_bn else 0
-    x = Flatten()(image)
-    x = (Dense(1280))(x)
+    image = Input(shape=(16, 16, 55, 1 ), name='image')
+
+    bnm=2 if fixed_bn else 0
+    f=(5,5,5)
+    x = _Conv3D(32, 2, 2, 10, border_mode='same',
+               name='disc_c1')(image)
     x = LeakyReLU()(x)
-    x = _BatchNormalization(name='disc_bn1', mode=bnm)(x)
     x = Dropout(discr_drop_out)(x)
 
-    dnn = _Model(input=image, output=x, name='dnn')
+    x = ZeroPadding3D((2, 2,2))(x)
+    x = _Conv3D(8, 2, 2, 10, border_mode='valid',
+               name='disc_c2'
+    )(x)
+    x = LeakyReLU()(x)
+    x = _BatchNormalization(name='disc_bn1',
+                           mode=bnm,
+    )(x)
+    x = Dropout(discr_drop_out)(x)
+
+    x = ZeroPadding3D((2, 2, 2))(x)
+    x = _Conv3D(8, 2, 2, 2, border_mode='valid',
+               name='disc_c3'
+)(x)
+    x = LeakyReLU()(x)
+    x = _BatchNormalization(name='disc_bn2',
+                           #momentum = 0.00001
+                           mode=bnm,
+    )(x)
+    x = Dropout(discr_drop_out)(x)
+
+    x = ZeroPadding3D((1, 1, 1))(x)
+    x = _Conv3D(8, 2, 2, 2, border_mode='valid',
+               name='disc_c4'
+    )(x)
+    x = LeakyReLU()(x)
+    x = _BatchNormalization(name='disc_bn3',
+                           mode=bnm,
+    )(x)
+    x = Dropout(discr_drop_out)(x)
+
+    x = AveragePooling3D((2, 2, 2))(x)
+    h = Flatten()(x)
+
+    dnn = Model(input=image, output=h, name='dnn')
 
     dnn_out = dnn(image)
 
-    fake = _Dense(1, activation='sigmoid', name='classification')(dnn_out)
-    aux = _Dense(1, activation='linear', name='energy')(dnn_out)
-    ecal = Lambda(lambda x: K.sum(x, axis=(1, 2, 3)))(image)
+    fake = Dense(1, activation='sigmoid', name='classification')(dnn_out)
+    aux = Dense(1, activation='linear', name='energy')(dnn_out)
+    esum = Lambda(lambda x: K.sum(x, axis=(1, 2, 3)), name='sum_cell')(image)
 
-    return _Model(output=[fake, aux, ecal], input=image, name='discriminator_model')
+    return Model(output=[fake, aux, esum], input=image, name='discriminator_model')
 
 def generator(latent_size=200, return_intermediate=False, with_bn=True):
     latent = Input(shape=(latent_size, ))
     
     bnm=0
     
-    x = _Dense(16*16*55, input_dim=latent_size, init='glorot_normal',
-              name='gen_dense1')(latent)
-    x = Reshape((16, 16, 55, 1))(x)
+    x = Dense(64 * 8* 8, init='glorot_normal', name='gen_dense1')(latent)
+    x = Reshape((8, 8, 8, 8))(x)
+    x = _Conv3D(64, 6, 6, 8, border_mode='same', init='he_uniform', name='gen_c1')(x)
     x = LeakyReLU()(x)
-    
     if with_bn:
-        x = _BatchNormalization(name='gen_bn1',
-                           mode=bnm
-    )(x)
+        x = _BatchNormalization(name='gen_bn1', mode=bnm)(x)
+    x = UpSampling3D(size=(2, 2, 2))(x)
+    x = ZeroPadding3D((0, 0, 2))(x)
+    x = _Conv3D(6, 1, 1, 10, init='he_uniform', name='gen_c2')(x)
+    x = LeakyReLU()(x)
+    if with_bn:
+        x = _BatchNormalization(name='gen_bn2', mode=bnm)(x)
+        
+    x = UpSampling3D(size=(1, 1, 5))(x)
+    x = ZeroPadding3D((1, 1, 0))(x)
+
+    x = _Conv3D(1, 3, 3, 1, bias=False, init='glorot_normal', name='gen_c3')(x)
+
+    x = Activation('relu')(x)
 
     loc = _Model(input=latent, output=x)
     fake_image = loc(latent)
@@ -218,56 +262,55 @@ def generate(g, index, latent, sampled_labels):
 
 
 def metric(ganvar, g4var, energies, m):
-   #calculate totale absolute errors on average moments+energies 
-   ecal_size = 25
-   metricp = 0
-   metrice = 0
-   for energy in energies:
-     #Relative error on mean moment value for each moment and each axis
-     if (g4var['moms_x'+str(energy)].all() > 0.0) :
-        posx_error = (g4var['moms_x'+str(energy)] - ganvar['moms_x'+str(energy)])/g4var['moms_x'+str(energy)]
-     else:
-        posx_error = 1.
-     if (g4var['moms_y'+str(energy)].all() > 0.0) :
-        posy_error = (g4var['moms_y'+str(energy)] - ganvar['moms_y'+str(energy)])/g4var['moms_y'+str(energy)]
-     else:
-        posy_error = 1.
-     if (g4var['moms_z'+str(energy)].all() > 0.0) :
-        posz_error = (g4var['moms_z'+str(energy)] - ganvar['moms_z'+str(energy)])/g4var['moms_z'+str(energy)]
-     else:
-        posz_error = 1.
-     #Taking absolute of errors and adding for each axis then scaling by 3
-     pos_error = (np.absolute(posx_error) + np.absolute(posy_error) + np.absolute(posz_error))/3
-     #Summing over moments and dividing for number of moments
-     metricp += np.sum(pos_error)/m
-     #Take profile along each axis and find mean along events
-     eprofilex_error=0
-     eprofiley_error=0
-     eprofilez_error=0
-     if (g4var['sumx'+str(energy)].all() > 0.0) :
-        eprofilex_error = np.divide((g4var['sumx'+str(energy)] - ganvar['sumx'+str(energy)]), g4var['sumx'+str(energy)])
-     else:
-        eprofilex_error  =1.
-        #raise ValueError('Image with NULL energy!')
-     if (g4var['sumy'+str(energy)].all() > 0.0) :
-        eprofiley_error = np.divide((g4var['sumy'+str(energy)] - ganvar['sumy'+str(energy)]), g4var['sumy'+str(energy)])
-     else:
-        eprofiley_error  =1.
-        #raise ValueError('Image with NULL energy!')
-     if (g4var['sumy'+str(energy)].all() > 0.0) :
-        eprofilez_error = np.divide((g4var['sumz'+str(energy)] - ganvar['sumz'+str(energy)]), g4var['sumz'+str(energy)])
-     else:
-        eprofilez_error  =1.
-        #raise ValueError('Image with NULL energy!')
-     #Take absolute of error and mean for all events
-     eprofilex_total = np.sum(np.absolute(eprofilex_error))/ecal_size
-     eprofiley_total = np.sum(np.absolute(eprofiley_error))/ecal_size
-     eprofilez_total = np.sum(np.absolute(eprofilez_error))/ecal_size
+    #calculate totale absolute errors on average moments+energies 
+    ecal_size = 25
+    metricp = 0
+    metrice = 0
+    for energy in energies:
+    # Relative error on mean moment value for each moment and each axis
+        if (g4var['moms_x'+str(energy)].all() > 0.0):
+            posx_error = (g4var['moms_x'+str(energy)] - ganvar['moms_x'+str(energy)])/g4var['moms_x'+str(energy)]
+        else:
+            posx_error = 1.
+        if (g4var['moms_y'+str(energy)].all() > 0.0) :
+            posy_error = (g4var['moms_y'+str(energy)] - ganvar['moms_y'+str(energy)])/g4var['moms_y'+str(energy)]
+        else:
+            posy_error = 1.
+        if (g4var['moms_z'+str(energy)].all() > 0.0) :
+            posz_error = (g4var['moms_z'+str(energy)] - ganvar['moms_z'+str(energy)])/g4var['moms_z'+str(energy)]
+        else:
+            posz_error = 1.
+        #Taking absolute of errors and adding for each axis then scaling by 3
+        pos_error = (np.absolute(posx_error) + np.absolute(posy_error) + np.absolute(posz_error))/3
+        #Summing over moments and dividing for number of moments
+        metricp += np.sum(pos_error)/m
+        #Take profile along each axis and find mean along events
+        eprofilex_error=0
+        eprofiley_error=0
+        eprofilez_error=0
+        if (g4var['sumx'+str(energy)].all() > 0.0) :
+            eprofilex_error = np.divide((g4var['sumx'+str(energy)] - ganvar['sumx'+str(energy)]), g4var['sumx'+str(energy)])
+        else:
+            eprofilex_error  =1.
+            #raise ValueError('Image with NULL energy!')
+        if (g4var['sumy'+str(energy)].all() > 0.0) :
+            eprofiley_error = np.divide((g4var['sumy'+str(energy)] - ganvar['sumy'+str(energy)]), g4var['sumy'+str(energy)])
+        else:
+            eprofiley_error  =1.
+            #raise ValueError('Image with NULL energy!')
+        if (g4var['sumy'+str(energy)].all() > 0.0) :
+            eprofilez_error = np.divide((g4var['sumz'+str(energy)] - ganvar['sumz'+str(energy)]), g4var['sumz'+str(energy)])
+        else:
+            eprofilez_error  =1.
+            #raise ValueError('Image with NULL energy!')
+        #Take absolute of error and mean for all events
+        eprofilex_total = np.sum(np.absolute(eprofilex_error))/ecal_size
+        eprofiley_total = np.sum(np.absolute(eprofiley_error))/ecal_size
+        eprofilez_total = np.sum(np.absolute(eprofilez_error))/ecal_size
 
-     metrice +=(eprofilex_total + eprofiley_total + eprofilez_total)/3
-   tot = (metricp + metrice)/len(energies)
-   return(tot)
-
+        metrice +=(eprofilex_total + eprofiley_total + eprofilez_total)/3
+    tot = (metricp + metrice)/len(energies)
+    return(tot)
 
 
 def bit_flip(x, prob=0.05):

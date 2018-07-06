@@ -20,6 +20,11 @@ import h5py
 import setGPU
 import json
 import time
+import numpy as np
+
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
 
 
 gan_args = {
@@ -116,13 +121,24 @@ def dump():
 
 nepochs = options.epochs
 
+def plotPred(sums, yc, i):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.hist(sums, alpha=0.5, bins=50, label='generated')
+    ax.hist(yc, alpha=0.5, bins=50, label='true')
+    plt.legend()
+    ax.set_xlabel('Energy (GeV)')
+    ax.set_ylabel('n events')
+    #plt.show()
+    plt.savefig('figs/pred_%s.png'%i)
+
 histories={}
 for e in range(nepochs):
     history[e] = []
     thistory[e] = []
     fhistory[e] = []
     e_start = time.mktime(time.gmtime())
-    for sub_X,sub_Y in data.generate_data():
+    for sub_X, sub_Y in data.generate_data():
         ibatch+=1
         #print (ibatch,ibatch>max_batch,max_batch)
         if over_test or not train_me:
@@ -137,6 +153,23 @@ for e in range(nepochs):
             gm.update_history( l , histories)                
             losses = [list(map(float,l)) for l in losses]
             history[e].append( losses )
+
+            ## make plots
+            yc = sub_Y[2]
+            # number of events = batch size = len(sub_X) = 100
+            noise = np.random.normal(0, 1, (len(sub_X), 200))
+            sampled_energies = np.random.uniform(0.1, 5, (100, 1))
+            generator_in = np.multiply(sampled_energies, noise)
+            
+            generated_images = gm.generator.predict(generator_in)
+            inp_sums = np.sum(generated_images, axis=(1, 2, 3))
+            plotPred(inp_sums, yc, e)
+
+            # save weights after every epoch
+            gm.generator.save_weights('weights_epoch/simple_generator_epoch_%s.h5'%e)
+            gm.discriminator.save_weights('weights_epoch/simple_discriminator_epoch_%s.h5'%e)
+            gm.combined.save_weights('weights_epoch/simple_combined_epoch_%s.h5'%e)
+
         if max_batch and ibatch>max_batch:
             break
             
