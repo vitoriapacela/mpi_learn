@@ -166,9 +166,9 @@ for e in range(nepochs):
             plotPred(inp_sums, yc, e)
 
             # save weights after every epoch
-            gm.generator.save_weights('weights_epoch/simple_generator_epoch_%s.h5'%e)
-            gm.discriminator.save_weights('weights_epoch/simple_discriminator_epoch_%s.h5'%e)
-            gm.combined.save_weights('weights_epoch/simple_combined_epoch_%s.h5'%e)
+            gm.generator.save_weights('weights_epoch/simple_generator_%s_epoch_%s.h5'%(tag, e))
+            gm.discriminator.save_weights('weights_epoch/simple_discriminator_%s_epoch_%s.h5'%(tag, e))
+            gm.combined.save_weights('weights_epoch/simple_combined_%s_epoch_%s.h5'%(tag, e))
 
         if max_batch and ibatch>max_batch:
             break

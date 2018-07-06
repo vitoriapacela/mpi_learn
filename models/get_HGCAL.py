@@ -27,7 +27,8 @@ def get_data(datafile):
     return X, y, sum_image
 
 # lxplus:
-dest = '/afs/cern.ch/user/v/vbarinpa/work_dir/HGCAL_h5/'
+#dest = '/afs/cern.ch/user/v/vbarinpa/work_dir/HGCAL_data/new/' for all_noPU
+dest = '/afs/cern.ch/user/v/vbarinpa/work_dir/HGCAL_data/new_multi_small/'
 
 # Caltech:
 #dest = '/data/shared/HGCAL_h5/'
@@ -43,9 +44,13 @@ if not os.path.exists(dest):
 #data_original = '/bigdata/shared/HGCAL_energy_h5/'
 
 # lxplus:
-data_original = '/afs/cern.ch/user/v/vbarinpa/work_dir/convert/experimental_mod/HGCAL_energy_h5/'
+#data_original = '/afs/cern.ch/user/v/vbarinpa/work_dir/convert/experimental_mod/HGCAL_energy_h5/'
+#data_original = '/afs/cern.ch/user/v/vbarinpa/work_dir/convert/experimental_mod/new/all_noPU.h5'
+data_original = '/afs/cern.ch/user/v/vbarinpa/work_dir/convert/experimental_mod/new/noPU/'
+
 
 for F in glob.glob(data_original + '*.h5'):
+#for F in glob.glob(data_original):
     _,d,f = F.rsplit('/', 2)
     #if not 'Ele' in d: continue
     X = None
@@ -68,7 +73,7 @@ for F in glob.glob(data_original + '*.h5'):
             nf = '%s%s_sub%s'%(dest, f, sub)
             if os.path.isfile( nf) :
                 continue
-            print ("processing files",F,"into",nf)
+            print ("processing files", F, "into",nf)
             if X is None:
                 X, y, sum_image = get_data(F)
                 N = X.shape[0]
@@ -83,11 +88,11 @@ for F in glob.glob(data_original + '*.h5'):
             X = None
     o.close()
 
-open('train_3d_energy.list','w').write( '\n'.join(filter(lambda f:not 'sub' in f, glob.glob(dest+'/*.h5')[:-4])))
-open('test_3d_energy.list','w').write( '\n'.join(filter(lambda f:not 'sub' in f,glob.glob(dest+'/*.h5')[-4:])))
+open('train_3d_energy.list', 'w').write( '\n'.join(filter(lambda f:not 'sub' in f, glob.glob(dest+'/*.h5')[:-4])))
+open('test_3d_energy.list', 'w').write( '\n'.join(filter(lambda f:not 'sub' in f,glob.glob(dest+'/*.h5')[-4:])))
 
 #open('train_small_3d.list','w').write( '\n'.join(filter(lambda f:not 'sub' in f,glob.glob(dest+'/*.h5')[:-4])))
 #open('test_small_3d.list','w').write( '\n'.join(filter(lambda f:not 'sub' in f,glob.glob(dest+'/*.h5')[-4:])))
 
-open('train_7_3d_energy.list','w').write( '\n'.join(filter(lambda f:not 'sub' in f,glob.glob(dest+'/*.h5')[:7])))
-open('test_1_3d_energy.list','w').write( '\n'.join(filter(lambda f:not 'sub' in f,glob.glob(dest+'/*.h5')[-1:])))
+open('train_7_3d_energy.list', 'w').write( '\n'.join(filter(lambda f:not 'sub' in f,glob.glob(dest+'/*.h5')[:7])))
+open('test_1_3d_energy.list', 'w').write( '\n'.join(filter(lambda f:not 'sub' in f,glob.glob(dest+'/*.h5')[-1:])))
