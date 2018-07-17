@@ -9,6 +9,7 @@ For more information about `mpi_learn`, check the [original branch](https://gith
 * [`matplotlib`](https://matplotlib.org/)
 * [`h5py`](http://www.h5py.org/)
 * `setGPU`
+* `gpustat`
 * [`tensorflow-gpu`](https://www.tensorflow.org/)
 * [`keras`](https://keras.io/) (v. >= 1.2.0)
 * [`root_numpy`](https://github.com/scikit-hep/root_numpy)
