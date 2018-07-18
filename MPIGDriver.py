@@ -116,11 +116,11 @@ if __name__ == '__main__':
 
     if args.tf:
         #model_builder = ModelFromJsonTF( comm, args.model_json, device_name=device , weights=args.model_weights)
-        from mpi_learn.train.GanModel import GANModelBuilder
+        from mpi_learn.train.HGCALModel import GANModelBuilder
         model_builder  = GANModelBuilder( comm , device_name=device, tf= True, weights=args.model_weights)
         print ("Process {0} using device {1}".format(comm.Get_rank(), model_builder.device))
     else:
-        from mpi_learn.train.GanModel import GANModelBuilder
+        from mpi_learn.train.HGCALModel import GANModelBuilder
         model_builder  = GANModelBuilder( comm , device_name=device, weights=args.model_weights)
         print ("Process {0} using device {1}".format(comm.Get_rank(),device))
         os.environ['THEANO_FLAGS'] = "profile=%s,device=%s,floatX=float32" % (args.profile,device.replace('gpu','cuda'))

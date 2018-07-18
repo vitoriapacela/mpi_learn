@@ -368,7 +368,7 @@ class GANModel(MPIModel):
         self._switchingloss = args.get('switchingloss',False)
         self._heavycheck = args.get('heavycheck',False)
         self._show_values = args.get('show_values',False)
-        self._show_loss = args.get('show_loss', True)
+        self._show_loss = args.get('show_loss', False)
         self._show_weights = False
 
         self.latent_size=args.get('latent_size',200)

@@ -849,6 +849,9 @@ class MPIMaster(MPIProcess):
         self.print_metrics(val_metrics)
         if tell: print ("Ending validation")
         Trace.end("validation", "VALIDATION")
+
+        # Save model weights for every epoch:
+        self.model.save("weights_epoch/model_weights_epoch_"+str(self.epoch)+".h5")
         return None
 
     def apply_update(self):
