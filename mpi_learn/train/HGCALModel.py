@@ -156,22 +156,22 @@ def discriminator(fixed_bn = False, discr_drop_out=0.2):
     x = AveragePooling3D((2, 2, 2))(x)
     h = Flatten()(x)
 
-    dnn = Model(input=image, output=h, name='dnn')
+    dnn = _Model(input=image, output=h, name='dnn')
 
     dnn_out = dnn(image)
 
-    fake = Dense(1, activation='sigmoid', name='classification')(dnn_out)
-    aux = Dense(1, activation='linear', name='energy')(dnn_out)
+    fake = _Dense(1, activation='sigmoid', name='classification')(dnn_out)
+    aux = _Dense(1, activation='linear', name='energy')(dnn_out)
     esum = Lambda(lambda x: K.sum(x, axis=(1, 2, 3)), name='sum_cell')(image)
 
-    return Model(output=[fake, aux, esum], input=image, name='discriminator_model')
+    return _Model(output=[fake, aux, esum], input=image, name='discriminator_model')
 
 def generator(latent_size=200, return_intermediate=False, with_bn=True):
     latent = Input(shape=(latent_size, ))
     
     bnm=0
     
-    x = Dense(64 * 8* 8, init='glorot_normal', name='gen_dense1')(latent)
+    x = _Dense(64 * 8* 8, init='glorot_normal', name='gen_dense1')(latent)
     x = Reshape((8, 8, 8, 8))(x)
     x = _Conv3D(64, 6, 6, 8, border_mode='same', init='he_uniform', name='gen_c1')(x)
     x = LeakyReLU()(x)
@@ -197,9 +197,14 @@ def generator(latent_size=200, return_intermediate=False, with_bn=True):
     return _Model(input=[latent], output=fake_image, name='generator_model')
 
 def get_sums(images):
-    sumsx = np.squeeze(np.sum(images, axis=(1,2)))
-    sumsy = np.squeeze(np.sum(images, axis=(0,2)))
-    sumsz = np.squeeze(np.sum(images, axis=(0,1)))
+    #sumsx = np.squeeze(np.sum(images, axis=(1,2)))
+    #sumsy = np.squeeze(np.sum(images, axis=(0,2)))
+    #sumsz = np.squeeze(np.sum(images, axis=(0,1)))
+    
+    sumsx = np.squeeze(np.sum(images, axis=(2,3)))
+    sumsy = np.squeeze(np.sum(images, axis=(1,3)))
+    sumsz = np.squeeze(np.sum(images, axis=(1,2)))
+    
     return sumsx, sumsy, sumsz
 
 def get_moments(images, sumsx, sumsy, sumsz, totalE, m):
@@ -419,74 +424,74 @@ class GANModel(MPIModel):
         self.p_t = []
 
 
-    def big_assemble_models(self):
+#     def big_assemble_models(self):
 
-        image = Input(shape=(13, 13, 55, 24), name='image')
+#         image = Input(shape=(13, 13, 55, 24), name='image')
 
-        x = _Conv3D(32, 2.5, 2.5, 10, border_mode='same')(image)
-        x = LeakyReLU()(x)
-        x = Dropout(discr_drop_out)(x)
+#         x = _Conv3D(32, 2.5, 2.5, 10, border_mode='same')(image)
+#         x = LeakyReLU()(x)
+#         x = Dropout(discr_drop_out)(x)
 
-        x = ZeroPadding3D((1, 1, 4))(x)
-        x = _Conv3D(8, 5, 5, 5, border_mode='valid')(x)
-        x = LeakyReLU()(x)
-        x = BatchNormalization()(x)
-        x = Dropout(discr_drop_out)(x)
+#         x = ZeroPadding3D((1, 1, 4))(x)
+#         x = _Conv3D(8, 5, 5, 5, border_mode='valid')(x)
+#         x = LeakyReLU()(x)
+#         x = BatchNormalization()(x)
+#         x = Dropout(discr_drop_out)(x)
 
-        x = ZeroPadding3D((1, 1, 4))(x)
-        x = Conv3D(8, 2.5, 2.5, 10, border_mode='valid')(x)
-        x = LeakyReLU()(x)
-        x = BatchNormalization()(x)
-        x = Dropout(discr_drop_out)(x)
+#         x = ZeroPadding3D((1, 1, 4))(x)
+#         x = Conv3D(8, 2.5, 2.5, 10, border_mode='valid')(x)
+#         x = LeakyReLU()(x)
+#         x = BatchNormalization()(x)
+#         x = Dropout(discr_drop_out)(x)
 
-        x = ZeroPadding3D((1, 1, 2))(x)
-        x = Conv3D(8, 2.5, 2.5, 10, border_mode='valid')(x)
-        x = LeakyReLU()(x)
-        x = BatchNormalization()(x)
-        x = Dropout(discr_drop_out)(x)
+#         x = ZeroPadding3D((1, 1, 2))(x)
+#         x = Conv3D(8, 2.5, 2.5, 10, border_mode='valid')(x)
+#         x = LeakyReLU()(x)
+#         x = BatchNormalization()(x)
+#         x = Dropout(discr_drop_out)(x)
 
-        x = AveragePooling3D((1, 1, 4))(x)
-        h = Flatten()(x)
+#         x = AveragePooling3D((1, 1, 4))(x)
+#         h = Flatten()(x)
 
 
-        fake = Dense(1, activation='sigmoid', name='generation')(h)
-        aux = Dense(1, activation='linear', name='auxiliary')(h)
-        ecal = Lambda(lambda x: K.sum(x, axis=(1, 2, 3)))(image)
+#         fake = Dense(1, activation='sigmoid', name='generation')(h)
+#         aux = Dense(1, activation='linear', name='auxiliary')(h)
+#         ecal = Lambda(lambda x: K.sum(x, axis=(1, 2, 3)))(image)
 
-        self.discriminator = Model(output=[fake, aux, ecal], input=image, name='discriminator_model')
+#         self.discriminator = Model(output=[fake, aux, ecal], input=image, name='discriminator_model')
 
-        latent = Input(shape=(self.latent_size, ))
+#         latent = Input(shape=(self.latent_size, ))
 
-        x = Dense(64 * 7 * 7, init='he_uniform')(latent)
-        x = Reshape((7, 7, 8, 8))(x)
-        x = Conv3D(64, 6, 6, 8, border_mode='same', init='he_uniform' )(x)
-        x = LeakyReLU()(x)
-        x = BatchNormalization()(x)
-        x = UpSampling3D(size=(1, 1, 4))(x)
+#         x = Dense(64 * 7 * 7, init='he_uniform')(latent)
+#         x = Reshape((7, 7, 8, 8))(x)
+#         x = Conv3D(64, 6, 6, 8, border_mode='same', init='he_uniform' )(x)
+#         x = LeakyReLU()(x)
+#         x = BatchNormalization()(x)
+#         x = UpSampling3D(size=(1, 1, 4))(x)
 
-        x = ZeroPadding3D((1, 1, 0))(x)
-        x = Conv3D(6, 6, 5, 8, init='he_uniform')(x)
-        x = LeakyReLU()(x)
-        x = BatchNormalization()(x)
-        x = UpSampling3D(size=(2, 2, 3))(x)
+#         x = ZeroPadding3D((1, 1, 0))(x)
+#         x = Conv3D(6, 6, 5, 8, init='he_uniform')(x)
+#         x = LeakyReLU()(x)
+#         x = BatchNormalization()(x)
+#         x = UpSampling3D(size=(2, 2, 3))(x)
 
-        x = ZeroPadding3D((1, 0, 3))(x)
-        x = Conv3D(6, 1.5, 1.5, 16, init='he_uniform')(x)
-        x = LeakyReLU()(x)
+#         x = ZeroPadding3D((1, 0, 3))(x)
+#         x = Conv3D(6, 1.5, 1.5, 16, init='he_uniform')(x)
+#         x = LeakyReLU()(x)
 
-        x = Conv3D(24, 1, 1, 4, bias=False, init='glorot_normal')(x)
-        x = Activation('relu')(x)
+#         x = Conv3D(24, 1, 1, 4, bias=False, init='glorot_normal')(x)
+#         x = Activation('relu')(x)
 
-        loc = Model(latent, x)
-        #fake_image = loc(latent)
-        self.generator = Model(input=latent, output=x, name='generator_model')
+#         loc = Model(latent, x)
+#         #fake_image = loc(latent)
+#         self.generator = Model(input=latent, output=x, name='generator_model')
 
-        c_fake, c_aux, c_ecal = self.discriminator(x)
-        self.combined = Model(
-            input = latent,
-            output = [c_fake, c_aux, c_ecal],
-            name='combined_model'
-            )
+#         c_fake, c_aux, c_ecal = self.discriminator(x)
+#         self.combined = Model(
+#             input = latent,
+#             output = [c_fake, c_aux, c_ecal],
+#             name='combined_model'
+#             )
 
 
     def ext_assemble_models(self):
