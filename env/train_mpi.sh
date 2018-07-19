@@ -1,14 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=mpi_learn
 #SBATCH -c 2
-#SBATCH --gres=gpu:1
-#SBATCH -p gpu
+#SBATCH --gres=gpu:1 
+#SBATCH -p gpu --exclude=workergpu[00-07] # use only V100
 #SBATCH -t 7-0
 #SBATCH --output train.out
 
-#!/bin/bash 
-
-## This script allocates any GPU!
+#!/bin/bash
 
 # Load necessary modules
 module purge
