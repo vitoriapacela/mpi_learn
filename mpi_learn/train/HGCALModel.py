@@ -179,7 +179,7 @@ def generator(latent_size=200, return_intermediate=False, with_bn=True):
         x = _BatchNormalization(name='gen_bn1', mode=bnm)(x)
     x = UpSampling3D(size=(2, 2, 2))(x)
     x = ZeroPadding3D((0, 0, 2))(x)
-    x = _Conv3D(6, 1, 1, 10, init='he_uniform', name='gen_c2')(x)
+    x = _Conv3D(6, 1, 1, 10, border_mode='valid', init='he_uniform', name='gen_c2')(x)
     x = LeakyReLU()(x)
     if with_bn:
         x = _BatchNormalization(name='gen_bn2', mode=bnm)(x)
@@ -187,7 +187,7 @@ def generator(latent_size=200, return_intermediate=False, with_bn=True):
     x = UpSampling3D(size=(1, 1, 5))(x)
     x = ZeroPadding3D((1, 1, 0))(x)
 
-    x = _Conv3D(1, 3, 3, 1, bias=False, init='glorot_normal', name='gen_c3')(x)
+    x = _Conv3D(1, 3, 3, 1, bias=False, border_mode='valid', init='glorot_normal', name='gen_c3')(x)
 
     x = Activation('relu')(x)
 
