@@ -1,6 +1,5 @@
 # mpi_learn ![Build Status](https://travis-ci.org/vitoriapacela/mpi_learn.svg?branch=master)
-GANs for HGCAL data.
-Currently only simple_train implemented, not distributed training with mpi.
+GANs for HGCAL data with MPI.
 
 For more information about `mpi_learn`, check the [original branch](https://github.com/duanders/mpi_learn).
 
@@ -23,4 +22,5 @@ For more information about `mpi_learn`, check the [original branch](https://gith
 * Modify `models/get_HGCAL.py` according to the location of the data.
 * `python models/get_HGCAL.py`
 * Modify `mpi_learn/train/HGCALModel.py` according to the shape and format of the data.
-* `python simple_train`
+* `python simple_train` or
+* `mpirun -n 3 python3 MPIGDriver.py weights/simple_train_rmsprop_.json train_norm.list test_norm.list --loss categorical_crossentropy --epochs 50 --tf --features-name "image" --features-name X --labels-name y`
